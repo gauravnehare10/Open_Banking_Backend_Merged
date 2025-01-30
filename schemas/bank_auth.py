@@ -3,6 +3,7 @@ from urllib.parse import urlparse, parse_qs
 from fastapi import HTTPException
 from config.bank_data import BANK_FUNCTIONS
 from config.database import account_access_consents, account_auth_tokens
+import uuid
 
 def get_access_token(bank_info):
     
@@ -72,7 +73,7 @@ def authorize(consent_id: str, bank_info):
     code = process_redirect(redirect_uri)
     return code
 
-def get_auth_code(bank):
+def get_auth_consent(bank, userId):
     """
     Create an Account Access Consent.
     """
@@ -107,10 +108,14 @@ def get_auth_code(bank):
     }
     response = requests.post(url, json=payload, headers=headers)
     if response.status_code == 201:
-        consent_data = response.json()
-        consent_id = consent_data["Data"]["ConsentId"]
+        consent_data = response.json()["Data"]
+        consent_id = consent_data["ConsentId"]
         code = authorize(consent_id, bank_info)
-        return code
+        consent_data["_id"] = str(uuid.uuid4())
+        consent_data["UserId"] = userId
+        consent_data["bank"] = bank
+        account_access_consents.insert_one(consent_data)
+        return {"code": code, "consent_id": consent_id}
     else:
         raise HTTPException(
             status_code=response.status_code,
@@ -125,11 +130,11 @@ def get_bank_info(bank):
     return BANK_FUNCTIONS[bank]()
 
 def fetch_access_token(userId, bank):
-    tokens = account_auth_tokens.find_one({'userId': userId, 'bank': bank})
+    tokens = account_auth_tokens.find_one({'UserId': userId, 'bank': bank})
     return tokens.get("access_token")
 
 
 def get_consent_id(userId):
-    consent = account_access_consents.find_one({'userId': userId})
+    consent = account_access_consents.find_one({'UserId': userId})
     consent_id = consent.get("ConsentId")
     return consent_id

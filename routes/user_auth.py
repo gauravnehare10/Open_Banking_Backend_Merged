@@ -1,7 +1,8 @@
 import uuid
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from models.models import Token, RegisterUser
 from schemas.user_auth import *
+from config.database import users_collection
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError
 

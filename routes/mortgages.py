@@ -11,10 +11,10 @@ router = APIRouter(prefix="/mortgages")
 @router.get('/')
 async def get_mortgage_details(current_user: User = Depends(get_current_user)):
     try:
-        existing_mortgages = existing_mortgage_collection.find({"user_id": current_user.userId})
+        existing_mortgages = existing_mortgage_collection.find({"UserId": current_user.userId})
         print(existing_mortgages)
 
-        new_mortgages = new_mortgage_collection.find({"user_id": current_user.userId})
+        new_mortgages = new_mortgage_collection.find({"UserId": current_user.userId})
         print(new_mortgages)
 
         existing_mortgages_list = list(existing_mortgages)
@@ -35,7 +35,7 @@ async def add_mortgage_details(data: MortgageData, current_user: User = Depends(
         if data.hasMortgage:
             entry = {
                 "_id": custom_id,
-                "user_id": current_user.userId,  # Add the user ID to establish the relationship
+                "UserId": current_user.userId,  # Add the user ID to establish the relationship
                 "hasMortgage": data.hasMortgage,
                 "paymentMethod": data.paymentMethod,
                 "estPropertyValue": data.estPropertyValue,
@@ -53,7 +53,7 @@ async def add_mortgage_details(data: MortgageData, current_user: User = Depends(
         else:
             entry = {
                 "_id": custom_id,
-                "user_id": current_user.userId,    # Add the user ID to establish the relationship
+                "UserId": current_user.userId,    # Add the user ID to establish the relationship
                 "isLookingForMortgage": data.isLookingForMortgage,
                 "foundProperty": data.foundProperty,
                 "newMortgageType": data.newMortgageType,
@@ -77,13 +77,13 @@ async def add_mortgage_details(data: MortgageData, current_user: User = Depends(
 @router.put('/{mortgage_id}/update_existing_mortgage')
 async def update_existing_mortgage(mortgage_id: str, request: dict, current_user: User = Depends(get_current_user)):
     try:
-        existing_mortgage = existing_mortgage_collection.find_one({"_id": mortgage_id, "user_id": current_user.userId})
+        existing_mortgage = existing_mortgage_collection.find_one({"_id": mortgage_id, "UserId": current_user.userId})
         if not existing_mortgage:
             raise HTTPException(status_code=404, detail="Existing mortgage not found.")
         
         updated_fields = {key: value for key, value in request.items() if value is not None}
         update_result = existing_mortgage_collection.update_one(
-            {"_id": mortgage_id, "user_id": current_user.userId},
+            {"_id": mortgage_id, "UserId": current_user.userId},
             {"$set": updated_fields}
         )
 
@@ -93,7 +93,7 @@ async def update_existing_mortgage(mortgage_id: str, request: dict, current_user
         
         # Fetch the updated existing mortgage details
         updated_mortgage = existing_mortgage_collection.find_one(
-            {"_id": mortgage_id, "user_id": current_user.userId}
+            {"_id": mortgage_id, "UserId": current_user.userId}
         )
         
         return {
@@ -108,7 +108,7 @@ async def update_new_mortgage(mortgage_id: str, request: dict, current_user: Use
     try:
         # Check if the new mortgage exists for the logged-in user
         new_mortgage = new_mortgage_collection.find_one(
-            {"_id": mortgage_id, "user_id": current_user.userId}
+            {"_id": mortgage_id, "UserId": current_user.userId}
         )
         if not new_mortgage:
             raise HTTPException(status_code=404, detail="New mortgage not found.")
@@ -116,7 +116,7 @@ async def update_new_mortgage(mortgage_id: str, request: dict, current_user: Use
         # Update the fields in the new mortgage
         updated_fields = {key: value for key, value in request.items() if value is not None}
         update_result = new_mortgage_collection.update_one(
-            {"_id": mortgage_id, "user_id": current_user.userId},
+            {"_id": mortgage_id, "UserId": current_user.userId},
             {"$set": updated_fields}
         )
 
@@ -126,7 +126,7 @@ async def update_new_mortgage(mortgage_id: str, request: dict, current_user: Use
 
         # Fetch the updated new mortgage details
         updated_mortgage = new_mortgage_collection.find_one(
-            {"_id": mortgage_id, "user_id": current_user.userId}
+            {"_id": mortgage_id, "UserId": current_user.userId}
         )
         
         return {

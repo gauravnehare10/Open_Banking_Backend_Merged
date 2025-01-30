@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from schemas.user_auth import get_current_user
-from schemas.bank_auth import get_auth_code, get_bank_info, fetch_access_token, get_consent_id
+from schemas.bank_auth import get_auth_consent, get_bank_info, fetch_access_token, get_consent_id
 from models.models import User
 from schemas.bank_auth import BANK_FUNCTIONS
 from config.database import account_auth_tokens, account_access_consents
@@ -116,21 +116,21 @@ async def callback(bank: str, current_user: User=Depends(get_current_user)):
     Handle callback after user authorization.
     """
     bank_info = get_bank_info(bank)
-    code = get_auth_code(bank)
+    consent = get_auth_consent(bank, current_user.userId)
     payload = {
         "client_id": bank_info.get("CLIENT_ID"),
         "client_secret": bank_info.get("CLIENT_SECRET"),
         "redirect_uri": bank_info.get("REDIRECT_URI"),
         "grant_type": "authorization_code",
-        "code": code,
+        "code": consent["code"]
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     response = requests.post(bank_info.get("TOKEN_URL"), data=payload, headers=headers)
     if response.status_code == 200:
         token_data = response.json()
-        token_data["user_id"] = current_user.userId
+        token_data["UserId"] = current_user.userId
         token_data["_id"] = str(uuid.uuid4())
-        token_data["bank_name"] = bank
+        token_data["bank"] = bank
         account_auth_tokens.insert_one(token_data)
         access_token = token_data["access_token"]
         return access_token
