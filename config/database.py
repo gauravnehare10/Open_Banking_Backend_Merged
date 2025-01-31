@@ -11,7 +11,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
 db_client = MongoClient(MONGO_URL)
-db = db_client.Open_Banking
+
+db = db_client.Open_Banking_DB
 
 users_collection = db.user_details
 existing_mortgage_collection = db.existing_mortgage_details
