@@ -48,7 +48,7 @@ async def add_user(request: RegisterUser):
             data={"sub": request.username}, expires_delta=refresh_token_expires
         )
 
-        return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+        return Token(access_token=access_token, refresh_token=refresh_token, token_type="bearer", expires_in=ACCESS_TOKEN_EXPIRE_SECONDS)
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

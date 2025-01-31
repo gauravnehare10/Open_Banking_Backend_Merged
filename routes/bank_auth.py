@@ -145,7 +145,7 @@ async def get_account_access_consent(bank, current_user: User=Depends(get_curren
     userId = current_user.userId
     access_token = fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    consent_id = get_consent_id(userId)
+    consent_id = get_consent_id(userId, bank)
     url = f"{bank_info.get("API_BASE_URL")}/account-access-consents/{consent_id}"
     headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/x-www-form-urlencoded"}
     async with httpx.AsyncClient() as client:

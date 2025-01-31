@@ -134,7 +134,15 @@ def fetch_access_token(userId, bank):
     return tokens.get("access_token")
 
 
-def get_consent_id(userId):
-    consent = account_access_consents.find_one({'UserId': userId})
+def get_consent_id(userId, bank):
+    consent = account_access_consents.find_one({'UserId': userId, 'bank': bank})
     consent_id = consent.get("ConsentId")
     return consent_id
+
+
+def store_in_db(data, UserId, bank, collection_name):
+    for one_data in data:
+        one_data["_id"] = str(uuid.uuid4())
+        one_data["UserId"] = UserId
+        one_data["bank"] = bank
+        collection_name.insert_one(one_data)

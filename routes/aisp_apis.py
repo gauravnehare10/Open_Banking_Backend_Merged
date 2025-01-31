@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from schemas.bank_auth import fetch_access_token, get_bank_info
+from schemas.bank_auth import fetch_access_token, get_bank_info, store_in_db
 from schemas.user_auth import get_current_user
 from config.database import *
 import httpx
@@ -23,10 +23,7 @@ async def get_accounts(bank: str, current_user: User=Depends(get_current_user)):
 
         data = response.json()["Data"]["Account"]
         # Save to MongoDB
-        for account in data:
-            account["_id"] = account.pop("AccountId", None)
-            account["UserId"] = userId
-            accounts.insert_one(account)
+        store_in_db(data, userId, bank, accounts)
 
         return data
     
@@ -61,10 +58,8 @@ async def get_account_transactions(account_id: str, bank: str, current_user: Use
 
         data = response.json()["Data"]["Transaction"]
         # Save to MongoDB
-        for transaction in data:
-            transaction["_id"] = transaction.pop("TransactionId", None)
-            transaction["UserId"] = userId
-            transactions.insert_one(transaction)
+        store_in_db(data, userId, bank, transactions)
+        
         return data
     
 @router.get("/accounts/{account_id}/beneficiaries")
@@ -81,10 +76,7 @@ async def get_account_beneficiaries(account_id: str, bank: str, current_user: Us
 
         data = response.json()["Data"]["Beneficiary"]
         # Save to MongoDB
-        for beneficiary in data:
-            beneficiary["_id"] = beneficiary.pop("BeneficiaryId", None)
-            beneficiary["UserId"] = userId
-            beneficiaries.insert_one(beneficiary)
+        store_in_db(data, userId, bank, beneficiaries)
 
         return data
 
@@ -102,10 +94,7 @@ async def get_account_balances(account_id: str, bank: str, current_user: User=De
 
         data = response.json()["Data"]["Balance"]
         # Save to MongoDB
-        for balance in data:
-            balance["_id"] = str(uuid.uuid4())
-            balance["UserId"] = userId
-            balances.insert_one(balance)
+        store_in_db(data, userId, bank, balances)
 
         return data
 
@@ -124,10 +113,8 @@ async def get_account_direct_debits(account_id: str, bank: str, current_user: Us
 
         data = response.json()["Data"]["DirectDebit"]
         # Save to MongoDB
-        for direct_debit in data:
-            direct_debit["_id"] = str(uuid.uuid4())
-            direct_debit["UserId"] = userId
-            direct_debits.insert_one(direct_debit)
+        store_in_db(data, userId, bank, direct_debits)
+
         return data
 
 @router.get("/accounts/{account_id}/standing-orders")
@@ -144,10 +131,7 @@ async def get_account_standing_orders(account_id: str, bank: str, current_user: 
 
         data = response.json()["Data"]["StandingOrder"]
         # Save to MongoDB
-        for standing_order in data:
-            standing_order["_id"] = str(uuid.uuid4())
-            standing_order["UserId"] = userId
-            standing_orders.insert_one(standing_order)
+        store_in_db(data, userId, bank, standing_orders)
 
         return data
 
@@ -166,7 +150,7 @@ async def get_account_product(account_id: str, bank: str, current_user: User=Dep
         data = response.json()["Data"]["Product"]
         # Save to MongoDB
         for product in data:
-            product["_id"] = product.pop("ProductId", None)
+            product["_id"] = str(uuid.uuid4())
             product["UserId"] = userId
             products.insert_one(product)
 
