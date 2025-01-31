@@ -14,11 +14,11 @@ async def add_user(request: RegisterUser):
         request.username = request.username.lower()
 
         # Check for existing user by username
-        if users_collection.find_one({"username": request.username}):
+        if await users_collection.find_one({"username": request.username}):
             raise HTTPException(status_code=400, detail="Username already exists.")
         
         # Check for existing user by email
-        if users_collection.find_one({"email": request.email}):
+        if await users_collection.find_one({"email": request.email}):
             raise HTTPException(status_code=400, detail="Email already exists.")
 
         # Hash the password
@@ -34,7 +34,7 @@ async def add_user(request: RegisterUser):
         }
 
         # Insert user into the database
-        users_collection.insert_one(user_data)
+        await users_collection.insert_one(user_data)
 
         # Generate token for automatic login
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_SECONDS)
@@ -57,7 +57,7 @@ async def add_user(request: RegisterUser):
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
-    user = authenticate_user(form_data.username, form_data.password)
+    user = await authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -87,7 +87,7 @@ async def refresh_access_token(refresh_token: str):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
         # Check if the user exists
-        user = users_collection.find_one({"username": username})
+        user = await users_collection.find_one({"username": username})
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 

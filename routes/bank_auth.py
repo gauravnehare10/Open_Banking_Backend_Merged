@@ -116,7 +116,7 @@ async def callback(bank: str, current_user: User=Depends(get_current_user)):
     Handle callback after user authorization.
     """
     bank_info = get_bank_info(bank)
-    consent = get_auth_consent(bank, current_user.userId)
+    consent = await get_auth_consent(bank, current_user.userId)
     payload = {
         "client_id": bank_info.get("CLIENT_ID"),
         "client_secret": bank_info.get("CLIENT_SECRET"),
@@ -129,9 +129,8 @@ async def callback(bank: str, current_user: User=Depends(get_current_user)):
     if response.status_code == 200:
         token_data = response.json()
         token_data["UserId"] = current_user.userId
-        token_data["_id"] = str(uuid.uuid4())
         token_data["bank"] = bank
-        account_auth_tokens.insert_one(token_data)
+        await account_auth_tokens.update_one({"UserId": current_user.userId, "bank": bank}, {"$set":token_data}, upsert=True)
         access_token = token_data["access_token"]
         return access_token
     else:
@@ -143,9 +142,9 @@ async def callback(bank: str, current_user: User=Depends(get_current_user)):
 @router.get("/account-access-consent")
 async def get_account_access_consent(bank, current_user: User=Depends(get_current_user)):
     userId = current_user.userId
-    access_token = fetch_access_token(userId, bank)
+    access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    consent_id = get_consent_id(userId, bank)
+    consent_id = await get_consent_id(userId, bank)
     url = f"{bank_info.get("API_BASE_URL")}/account-access-consents/{consent_id}"
     headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/x-www-form-urlencoded"}
     async with httpx.AsyncClient() as client:
@@ -156,5 +155,6 @@ async def get_account_access_consent(bank, current_user: User=Depends(get_curren
         data = response.json()["Data"]
 
         account_access_consents.update_one({"ConsentId": consent_id}, {"$set": data}, upsert=True)
-        user_account_consent_data = account_access_consents.find_one({"ConsentId": consent_id})
+        user_account_consent_data = await account_access_consents.find_one({"ConsentId": consent_id})
+        user_account_consent_data.pop("_id")
         return user_account_consent_data

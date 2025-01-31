@@ -16,14 +16,14 @@ async def read_users_me(
     return current_user
 
 @router.put('/users/{user_id}/update')
-def update_user(user_id: str, request: dict, current_user: User = Depends(get_current_user)):
+async def update_user(user_id: str, request: dict, current_user: User = Depends(get_current_user)):
     try:
-        existing_user = users_collection.find_one({'_id': user_id})
+        existing_user = await users_collection.find_one({'_id': user_id})
         if not existing_user:
             raise HTTPException(status_code=404, detail="User not found")
         
         updated_fields = {key: value for key, value in request.items() if value is not None}
-        update_result = users_collection.update_one(
+        update_result = await users_collection.update_one(
             {"_id": user_id},
             {"$set": updated_fields}
         )
@@ -32,7 +32,7 @@ def update_user(user_id: str, request: dict, current_user: User = Depends(get_cu
             raise HTTPException(status_code=400, detail="No changes made to the user.")
 
         # Fetch the updated user details
-        updated_user = users_collection.find_one({"_id": user_id})        
+        updated_user = await users_collection.find_one({"_id": user_id})        
         return {
             "message": "User details updated successfully.",
             "updated_user": updated_user

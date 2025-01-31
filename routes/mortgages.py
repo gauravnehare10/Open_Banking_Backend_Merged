@@ -11,18 +11,13 @@ router = APIRouter(prefix="/mortgages")
 @router.get('/')
 async def get_mortgage_details(current_user: User = Depends(get_current_user)):
     try:
-        existing_mortgages = existing_mortgage_collection.find({"UserId": current_user.userId})
-        print(existing_mortgages)
+        existing_mortgages = await existing_mortgage_collection.find({"UserId": current_user.userId}).to_list(None)
 
-        new_mortgages = new_mortgage_collection.find({"UserId": current_user.userId})
-        print(new_mortgages)
-
-        existing_mortgages_list = list(existing_mortgages)
-        new_mortgages_list = list(new_mortgages)
+        new_mortgages = await new_mortgage_collection.find({"UserId": current_user.userId}).to_list(None)
 
         return {
-            'existing_mortgages': existing_mortgages_list,
-            'new_mortgages': new_mortgages_list
+            'existing_mortgages': existing_mortgages,
+            'new_mortgages': new_mortgages
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
@@ -49,7 +44,7 @@ async def add_mortgage_details(data: MortgageData, current_user: User = Depends(
             }
 
             # Save the entry in the existing_mortgage_details collection
-            existing_mortgage_collection.insert_one(entry)
+            await existing_mortgage_collection.insert_one(entry)
         else:
             entry = {
                 "_id": custom_id,
@@ -66,7 +61,7 @@ async def add_mortgage_details(data: MortgageData, current_user: User = Depends(
                 "newPaymentMethod": data.newPaymentMethod,
                 'reference2': data.reference2
             }
-            new_mortgage_collection.insert_one(entry)
+            await new_mortgage_collection.insert_one(entry)
 
         return {"message": "Mortgage details saved successfully."}
     
@@ -77,12 +72,12 @@ async def add_mortgage_details(data: MortgageData, current_user: User = Depends(
 @router.put('/{mortgage_id}/update_existing_mortgage')
 async def update_existing_mortgage(mortgage_id: str, request: dict, current_user: User = Depends(get_current_user)):
     try:
-        existing_mortgage = existing_mortgage_collection.find_one({"_id": mortgage_id, "UserId": current_user.userId})
+        existing_mortgage = await existing_mortgage_collection.find_one({"_id": mortgage_id, "UserId": current_user.userId})
         if not existing_mortgage:
             raise HTTPException(status_code=404, detail="Existing mortgage not found.")
         
         updated_fields = {key: value for key, value in request.items() if value is not None}
-        update_result = existing_mortgage_collection.update_one(
+        update_result = await existing_mortgage_collection.update_one(
             {"_id": mortgage_id, "UserId": current_user.userId},
             {"$set": updated_fields}
         )
@@ -92,7 +87,7 @@ async def update_existing_mortgage(mortgage_id: str, request: dict, current_user
             raise HTTPException(status_code=400, detail="No changes made to the mortgage.")
         
         # Fetch the updated existing mortgage details
-        updated_mortgage = existing_mortgage_collection.find_one(
+        updated_mortgage = await existing_mortgage_collection.find_one(
             {"_id": mortgage_id, "UserId": current_user.userId}
         )
         
@@ -107,7 +102,7 @@ async def update_existing_mortgage(mortgage_id: str, request: dict, current_user
 async def update_new_mortgage(mortgage_id: str, request: dict, current_user: User = Depends(get_current_user)):
     try:
         # Check if the new mortgage exists for the logged-in user
-        new_mortgage = new_mortgage_collection.find_one(
+        new_mortgage = await new_mortgage_collection.find_one(
             {"_id": mortgage_id, "UserId": current_user.userId}
         )
         if not new_mortgage:
@@ -115,7 +110,7 @@ async def update_new_mortgage(mortgage_id: str, request: dict, current_user: Use
 
         # Update the fields in the new mortgage
         updated_fields = {key: value for key, value in request.items() if value is not None}
-        update_result = new_mortgage_collection.update_one(
+        update_result = await new_mortgage_collection.update_one(
             {"_id": mortgage_id, "UserId": current_user.userId},
             {"$set": updated_fields}
         )
@@ -125,7 +120,7 @@ async def update_new_mortgage(mortgage_id: str, request: dict, current_user: Use
             raise HTTPException(status_code=400, detail="No changes made to the mortgage.")
 
         # Fetch the updated new mortgage details
-        updated_mortgage = new_mortgage_collection.find_one(
+        updated_mortgage = await new_mortgage_collection.find_one(
             {"_id": mortgage_id, "UserId": current_user.userId}
         )
         

@@ -1,6 +1,7 @@
 import os
 from dotenv import find_dotenv, load_dotenv
 from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 
 dotenv_path = find_dotenv()
 load_dotenv(dotenv_path)
@@ -10,9 +11,9 @@ MONGO_URL = os.getenv('MONGO_URL')
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
-db_client = MongoClient(MONGO_URL)
+db_client = AsyncIOMotorClient(MONGO_URL)
 
-db = db_client.Open_Banking_DB
+db = db_client.Open_Banking
 
 users_collection = db.user_details
 existing_mortgage_collection = db.existing_mortgage_details

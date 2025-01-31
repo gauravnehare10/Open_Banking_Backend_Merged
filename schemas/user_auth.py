@@ -41,8 +41,8 @@ def create_refresh_token(data: dict, expires_delta: timedelta):
     })
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
-def get_user(username: str):
-    user_dict = users_collection.find_one({"username": username})
+async def get_user(username: str):
+    user_dict = await users_collection.find_one({"username": username})
     if user_dict:
         # Map database field 'password' to 'hashed_password'
         user_dict["hashed_password"] = user_dict.pop("password", None)
@@ -50,8 +50,8 @@ def get_user(username: str):
         return UserInDB(**user_dict)
     return None
 
-def authenticate_user(username: str, password: str):
-    user = get_user(username)
+async def authenticate_user(username: str, password: str):
+    user = await get_user(username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -82,7 +82,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     except InvalidTokenError:
         raise credentials_exception
     
-    user = get_user(username=token_data.username)
+    user = await get_user(username=token_data.username)
 
     if user is None:
         raise credentials_exception

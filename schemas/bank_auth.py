@@ -73,7 +73,7 @@ def authorize(consent_id: str, bank_info):
     code = process_redirect(redirect_uri)
     return code
 
-def get_auth_consent(bank, userId):
+async def get_auth_consent(bank, userId):
     """
     Create an Account Access Consent.
     """
@@ -111,10 +111,9 @@ def get_auth_consent(bank, userId):
         consent_data = response.json()["Data"]
         consent_id = consent_data["ConsentId"]
         code = authorize(consent_id, bank_info)
-        consent_data["_id"] = str(uuid.uuid4())
         consent_data["UserId"] = userId
         consent_data["bank"] = bank
-        account_access_consents.insert_one(consent_data)
+        await account_access_consents.update_one({"UserId": userId, "bank": bank}, {"$set":consent_data}, upsert=True) 
         return {"code": code, "consent_id": consent_id}
     else:
         raise HTTPException(
@@ -129,20 +128,16 @@ def get_bank_info(bank):
     
     return BANK_FUNCTIONS[bank]()
 
-def fetch_access_token(userId, bank):
-    tokens = account_auth_tokens.find_one({'UserId': userId, 'bank': bank})
+async def fetch_access_token(userId, bank):
+    tokens = await account_auth_tokens.find_one({'UserId': userId, 'bank': bank})
     return tokens.get("access_token")
 
 
-def get_consent_id(userId, bank):
-    consent = account_access_consents.find_one({'UserId': userId, 'bank': bank})
+async def get_consent_id(userId, bank):
+    consent = await account_access_consents.find_one({'UserId': userId, 'bank': bank})
     consent_id = consent.get("ConsentId")
     return consent_id
 
 
-def store_in_db(data, UserId, bank, collection_name):
-    for one_data in data:
-        one_data["_id"] = str(uuid.uuid4())
-        one_data["UserId"] = UserId
-        one_data["bank"] = bank
-        collection_name.insert_one(one_data)
+async def upsert_data(collection, filter_query, update_data):
+    await collection.update_one(filter_query, {"$set": update_data}, upsert=True)
