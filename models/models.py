@@ -60,3 +60,15 @@ class MortgageData(BaseModel):
     newPaymentMethod: Optional[str] = None
     reference1: Optional[str] = None
     reference2: Optional[str] = None
+
+class BankDetailsResponse(BaseModel):
+    bank: str
+    UserId: str
+    other_details: dict
+
+
+class TransactionAndBalanceRes(BaseModel):
+    bank: str
+    UserId: str
+    transaction: list[str]
+    balance: list[str]

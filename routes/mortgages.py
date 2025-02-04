@@ -30,7 +30,7 @@ async def add_mortgage_details(data: MortgageData, current_user: User = Depends(
         if data.hasMortgage:
             entry = {
                 "_id": custom_id,
-                "UserId": current_user.userId,  # Add the user ID to establish the relationship
+                "UserId": current_user.userId,
                 "hasMortgage": data.hasMortgage,
                 "paymentMethod": data.paymentMethod,
                 "estPropertyValue": data.estPropertyValue,
@@ -43,12 +43,11 @@ async def add_mortgage_details(data: MortgageData, current_user: User = Depends(
                 "reference1": data.reference1,
             }
 
-            # Save the entry in the existing_mortgage_details collection
             await existing_mortgage_collection.insert_one(entry)
         else:
             entry = {
                 "_id": custom_id,
-                "UserId": current_user.userId,    # Add the user ID to establish the relationship
+                "UserId": current_user.userId, 
                 "isLookingForMortgage": data.isLookingForMortgage,
                 "foundProperty": data.foundProperty,
                 "newMortgageType": data.newMortgageType,

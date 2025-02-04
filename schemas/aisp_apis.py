@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from schemas.bank_auth import fetch_access_token, get_bank_info, upsert_data
+from schemas.bank_auth import fetch_access_token, get_bank_info, upsert_data, get_consent_id
 from schemas.user_auth import get_current_user
 from config.database import *
 import httpx
@@ -9,9 +9,27 @@ from models.models import User
 
 router = APIRouter()
 
-@router.get("/accounts")
-async def get_accounts(bank: str, current_user: User=Depends(get_current_user)):
-    userId = current_user.userId
+#@router.get("/account-access-consent")
+async def get_account_access_consent(bank, userId):
+    access_token = await fetch_access_token(userId, bank)
+    bank_info = get_bank_info(bank)
+    consent_id = await get_consent_id(userId, bank)
+    url = f"{bank_info.get("API_BASE_URL")}/account-access-consents/{consent_id}"
+    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/x-www-form-urlencoded"}
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=headers)
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+
+        data = response.json()["Data"]
+
+        account_access_consents.update_one({"ConsentId": consent_id}, {"$set": data}, upsert=True)
+        user_account_consent_data = await account_access_consents.find_one({"ConsentId": consent_id})
+        user_account_consent_data.pop("_id")
+        return user_account_consent_data
+
+#@router.get("/accounts")
+async def get_accounts(bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
     url = f"{bank_info.get("API_BASE_URL")}/accounts"
@@ -25,7 +43,7 @@ async def get_accounts(bank: str, current_user: User=Depends(get_current_user)):
         # Save to MongoDB
         for account in data:
             account["UserId"] = userId
-            account["bank_name"] = bank
+            account["bank"] = bank
             await upsert_data(
                 accounts, 
                 {
@@ -36,8 +54,8 @@ async def get_accounts(bank: str, current_user: User=Depends(get_current_user)):
                 )
 
         return data
-    
-@router.get("/accounts/{account_id}")
+#    
+#@router.get("/accounts/{account_id}")
 async def get_account_details(account_id: str, bank: str, current_user: User=Depends(get_current_user)):
     userId = current_user.userId
     access_token = await fetch_access_token(userId, bank)
@@ -54,9 +72,8 @@ async def get_account_details(account_id: str, bank: str, current_user: User=Dep
         return data
 
 
-@router.get("/accounts/{account_id}/transactions")
-async def get_account_transactions(account_id: str, bank: str, current_user: User=Depends(get_current_user)):
-    userId = current_user.userId
+#@router.get("/accounts/{account_id}/transactions")
+async def get_account_transactions(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
     url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/transactions"
@@ -70,7 +87,7 @@ async def get_account_transactions(account_id: str, bank: str, current_user: Use
         # Save to MongoDB
         for transaction in data:
             transaction["UserId"] = userId
-            transaction["bank_name"] = bank
+            transaction["bank"] = bank
             await upsert_data(
                 transactions, 
                 {
@@ -82,9 +99,8 @@ async def get_account_transactions(account_id: str, bank: str, current_user: Use
         
         return data
 
-@router.get("/accounts/{account_id}/beneficiaries")
-async def get_account_beneficiaries(account_id: str, bank: str, current_user: User=Depends(get_current_user)):
-    userId = current_user.userId
+#@router.get("/accounts/{account_id}/beneficiaries")
+async def get_account_beneficiaries(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
     url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/beneficiaries"
@@ -98,7 +114,7 @@ async def get_account_beneficiaries(account_id: str, bank: str, current_user: Us
         # Save to MongoDB
         for beneficiary in data:
             beneficiary["UserId"] = userId
-            beneficiary["bank_name"] = bank
+            beneficiary["bank"] = bank
             await upsert_data(
                 beneficiaries, 
                 {
@@ -110,9 +126,8 @@ async def get_account_beneficiaries(account_id: str, bank: str, current_user: Us
 
         return data
 
-@router.get("/accounts/{account_id}/balances")
-async def get_account_balances(account_id: str, bank: str, current_user: User=Depends(get_current_user)):
-    userId = current_user.userId
+#@router.get("/accounts/{account_id}/balances")
+async def get_account_balances(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
     url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/balances"
@@ -140,9 +155,8 @@ async def get_account_balances(account_id: str, bank: str, current_user: User=De
         return data
 
 
-@router.get("/accounts/{account_id}/direct-debits")
-async def get_account_direct_debits(account_id: str, bank: str, current_user: User=Depends(get_current_user)):
-    userId = current_user.userId
+#@router.get("/accounts/{account_id}/direct-debits")
+async def get_account_direct_debits(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
     url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/direct-debits"
@@ -169,9 +183,8 @@ async def get_account_direct_debits(account_id: str, bank: str, current_user: Us
 
         return data
 
-@router.get("/accounts/{account_id}/standing-orders")
-async def get_account_standing_orders(account_id: str, bank: str, current_user: User=Depends(get_current_user)):
-    userId = current_user.userId
+#@router.get("/accounts/{account_id}/standing-orders")
+async def get_account_standing_orders(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
     url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/standing-orders"
@@ -198,9 +211,8 @@ async def get_account_standing_orders(account_id: str, bank: str, current_user: 
 
         return data
 
-@router.get("/accounts/{account_id}/product")
-async def get_account_product(account_id: str, bank: str, current_user: User=Depends(get_current_user)):
-    userId = current_user.userId
+#@router.get("/accounts/{account_id}/product")
+async def get_account_product(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
     url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/product"
@@ -227,9 +239,8 @@ async def get_account_product(account_id: str, bank: str, current_user: User=Dep
 
         return data
 
-@router.get("/accounts/{account_id}/scheduled-payments")
-async def get_account_scheduled_payments(account_id: str, bank: str, current_user: User=Depends(get_current_user)):
-    userId = current_user.userId
+#@router.get("/accounts/{account_id}/scheduled-payments")
+async def get_account_scheduled_payments(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
     url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/scheduled-payments"
@@ -256,7 +267,7 @@ async def get_account_scheduled_payments(account_id: str, bank: str, current_use
 
         return data
 
-@router.get("/accounts/{account_id}/statements")
+#@router.get("/accounts/{account_id}/statements")
 async def get_account_statements(account_id: str, bank: str, current_user: User=Depends(get_current_user)):
     userId = current_user.userId
     access_token = await fetch_access_token(userId, bank)
@@ -273,7 +284,7 @@ async def get_account_statements(account_id: str, bank: str, current_user: User=
 
         return data
 
-@router.get("/accounts/{account_id}/offers")
+#@router.get("/accounts/{account_id}/offers")
 async def get_account_offers(account_id: str, bank: str, current_user: User=Depends(get_current_user)):
     userId = current_user.userId
     access_token = fetch_access_token(userId, bank)

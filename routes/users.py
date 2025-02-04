@@ -1,21 +1,20 @@
-from typing import Annotated
+from typing import Annotated, List
 from fastapi import APIRouter, Depends, HTTPException
 
-from config.database import users_collection
+from config.database import users_collection, account_auth_tokens, account_access_consents
 from models.models import User
 from schemas.user_auth import get_current_user
-from fastapi.security import OAuth2PasswordRequestForm
 
 
-router = APIRouter()
+router = APIRouter(prefix="/users")
 
-@router.get("/users/me/", response_model=User)
+@router.get("/me/", response_model=User)
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
     return current_user
 
-@router.put('/users/{user_id}/update')
+@router.put('/{user_id}/update')
 async def update_user(user_id: str, request: dict, current_user: User = Depends(get_current_user)):
     try:
         existing_user = await users_collection.find_one({'_id': user_id})

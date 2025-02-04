@@ -1,9 +1,7 @@
 import requests
-from urllib.parse import urlparse, parse_qs
 from fastapi import HTTPException
 from config.bank_data import BANK_FUNCTIONS
 from config.database import account_access_consents, account_auth_tokens
-import uuid
 
 def get_access_token(bank_info):
     
@@ -33,95 +31,6 @@ def get_access_token(bank_info):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def process_redirect(redirect_uri):
-    # Parse the URL fragment
-    parsed_url = urlparse(redirect_uri)
-    fragment = parsed_url.fragment  # The part after '#'
-
-    # Parse the fragment into a dictionary
-    params = parse_qs(fragment)
-
-    # Extract the 'code' parameter
-    code = params.get("code", [None])[0]  # Get the first value or None if not found
-
-    if code:
-        return code
-    else:
-        return {"error": "code parameter not found in redirectUri"}
-
-def authorize(consent_id: str, bank_info):
-    """
-    Redirect user to authorize the consent.
-    """
-    auth_url = bank_info.get("AUTH_URL")
-    
-    request_data = {
-        "client_id": bank_info.get("CLIENT_ID"),
-        "response_type": "code id_token",
-        "scope": "openid accounts",
-        "redirect_uri": bank_info.get("REDIRECT_URI"),
-        "request": consent_id,
-        "authorization_mode": "AUTO_POSTMAN",
-        "authorization_result": "APPROVED",
-        "authorization_username": bank_info.get("AUTHORIZATION_USERNAME"),
-        "authorization_accounts": "*"   
-    }
-    query_params = "&".join([f"{key}={value}" for key, value in request_data.items()])
-    redirect_url = f"{auth_url}?{query_params}"
-    response = requests.get(redirect_url)
-    redirect_uri = response.json().get('redirectUri')
-    code = process_redirect(redirect_uri)
-    return code
-
-async def get_auth_consent(bank, userId):
-    """
-    Create an Account Access Consent.
-    """
-    BANK_FUNCTIONS[bank]
-    
-    bank_info = BANK_FUNCTIONS[bank]()
-    url = f"{bank_info.get("API_BASE_URL")}/account-access-consents"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {get_access_token(bank_info)}"
-    }
-    payload = {
-        "Data": {
-            "Permissions": [
-                "ReadAccountsDetail",
-                "ReadBalances",
-                "ReadBeneficiariesDetail",
-                "ReadDirectDebits",
-                "ReadProducts",
-                "ReadStandingOrdersDetail",
-                "ReadTransactionsCredits",
-                "ReadTransactionsDebits",
-                "ReadTransactionsDetail",
-                "ReadScheduledPaymentsBasic",
-                "ReadScheduledPaymentsDetail",
-                "ReadStatementsBasic", 
-                "ReadStatementsDetail",
-                "ReadOffers"
-            ]
-        },
-        "Risk": {}
-    }
-    response = requests.post(url, json=payload, headers=headers)
-    if response.status_code == 201:
-        consent_data = response.json()["Data"]
-        consent_id = consent_data["ConsentId"]
-        code = authorize(consent_id, bank_info)
-        consent_data["UserId"] = userId
-        consent_data["bank"] = bank
-        await account_access_consents.update_one({"UserId": userId, "bank": bank}, {"$set":consent_data}, upsert=True) 
-        return {"code": code, "consent_id": consent_id}
-    else:
-        raise HTTPException(
-            status_code=response.status_code,
-            detail=f"Failed to create consent: {response.json()}"
-        )
-
-
 def get_bank_info(bank):
     if bank not in BANK_FUNCTIONS:
         raise HTTPException(status_code=400, detail="Invalid bank name")
@@ -141,3 +50,20 @@ async def get_consent_id(userId, bank):
 
 async def upsert_data(collection, filter_query, update_data):
     await collection.update_one(filter_query, {"$set": update_data}, upsert=True)
+
+async def check_bank_authorization(userId, bank_name):
+    consent = await account_access_consents.find_one(
+        {"UserId": userId, "bank": bank_name, "Status": "Authorised"}
+    )
+
+    if not consent:
+        raise HTTPException(status_code=403, detail="Bank not Authorised")
+    
+    return consent
+
+async def get_data(collection, bank, userId, account_id):
+    data = await collection.find({'UserId': userId, 'bank': bank, "AccountId": account_id}).to_list(length=None)
+
+    for one_data in data:
+        one_data.pop("_id")
+    return data
