@@ -10,7 +10,7 @@ from config.database import users_collection, SECRET_KEY, ALGORITHM
 import jwt
 
 
-ACCESS_TOKEN_EXPIRE_SECONDS = 1800
+ACCESS_TOKEN_EXPIRE_SECONDS = 3600
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

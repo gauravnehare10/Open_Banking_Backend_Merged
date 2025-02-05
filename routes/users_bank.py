@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from models.models import User
 from schemas.user_auth import get_current_user
-from config.database import account_access_consents, account_auth_tokens, accounts, transactions, balances, beneficiaries
+from config.database import account_access_consents, account_auth_tokens, accounts, transactions, balances, beneficiaries, direct_debits, standing_orders, products, scheduled_payments
 from schemas.bank_auth import check_bank_authorization, get_data
 from pymongo import DESCENDING
 
@@ -36,25 +36,6 @@ async def get_bank_details(bank: str, current_user: User = Depends(get_current_u
         data.pop("_id")
     
     return accounts_data
-
-# @router.get('/balance-and-transaction/{bank}/{account_id}')
-# async def get_balance_and_transaction(bank: str, account_id: str, current_user: User=Depends(get_current_user)):
-#     authorized = await check_bank_authorization(current_user.userId, bank)
-    
-#     balance = await balances.find({"bank": bank, "UserId": current_user.userId, "AccountId": account_id}).to_list(length=None)
-#     transaction = await transactions.find({"bank": bank, "UserId": current_user.userId, "AccountId": account_id}).to_list(length=None)
-#     for one_balance in balance:
-#         one_balance.pop("_id")
-#     for one_transaction in transaction:
-#         one_transaction.pop("_id")
-
-#     transactions_and_balances = {
-#         "balances": balance,
-#         "transactions": transaction
-#     }
-#     return transactions_and_balances
-
-
 
 @router.get('/balance-and-transaction/{bank}/{account_id}')
 async def get_balance_and_transaction(
@@ -96,7 +77,6 @@ async def get_balance_and_transaction(
 
 @router.get('/{bank}/accounts/{account_id}')
 async def get_account_by_id(bank: str, account_id: str, current_user: User=Depends(get_current_user)):
-    print(current_user.userId)
     try:
         authorized = await check_bank_authorization(current_user.userId, bank)
     except HTTPException as e:
@@ -108,6 +88,7 @@ async def get_account_by_id(bank: str, account_id: str, current_user: User=Depen
 
 @router.get('/{bank}/accounts/{account_id}/transactions')
 async def get_transactions_by_acc_id(bank: str, account_id: str, current_user: User=Depends(get_current_user)):
+    print(current_user.userId)
     try:
         authorized = await check_bank_authorization(current_user.userId, bank)
     except HTTPException as e:
@@ -127,5 +108,50 @@ async def get_beneficiaries_by_id(bank: str, account_id: str, current_user: User
     beneficiaries_data = await get_data(beneficiaries, bank, current_user.userId, account_id)
 
     return beneficiaries_data
+
+
+@router.get('/{bank}/accounts/{account_id}/direct-debits')
+async def get_direct_debits_by_id(bank: str, account_id: str, current_user: User=Depends(get_current_user)):
+    try:
+        authorized = await check_bank_authorization(current_user.userId, bank)
+    except HTTPException as e:
+        raise e
+    
+    direct_debits_data = await get_data(direct_debits, bank, current_user.userId, account_id)
+
+    return direct_debits_data
+
+@router.get('/{bank}/accounts/{account_id}/standing-orders')
+async def get_direct_debits_by_id(bank: str, account_id: str, current_user: User=Depends(get_current_user)):
+    try:
+        authorized = await check_bank_authorization(current_user.userId, bank)
+    except HTTPException as e:
+        raise e
+    
+    standing_orders_data = await get_data(standing_orders, bank, current_user.userId, account_id)
+
+    return standing_orders_data
+
+@router.get('/{bank}/accounts/{account_id}/product')
+async def get_direct_debits_by_id(bank: str, account_id: str, current_user: User=Depends(get_current_user)):
+    try:
+        authorized = await check_bank_authorization(current_user.userId, bank)
+    except HTTPException as e:
+        raise e
+    
+    product_data = await get_data(products, bank, current_user.userId, account_id)
+
+    return product_data
+
+@router.get('/{bank}/accounts/{account_id}/scheduled-payments')
+async def get_direct_debits_by_id(bank: str, account_id: str, current_user: User=Depends(get_current_user)):
+    try:
+        authorized = await check_bank_authorization(current_user.userId, bank)
+    except HTTPException as e:
+        raise e
+    
+    scheduled_payments_data = await get_data(scheduled_payments, bank, current_user.userId, account_id)
+
+    return scheduled_payments_data
 
     
