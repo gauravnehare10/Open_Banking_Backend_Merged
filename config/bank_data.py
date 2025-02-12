@@ -1,4 +1,5 @@
 from dotenv import find_dotenv, load_dotenv
+from fastapi import HTTPException
 
 import os
 
@@ -32,3 +33,9 @@ BANK_FUNCTIONS = {
     "NatWest": NatWest,
     "RBS": RBS,
 }
+
+def get_bank_info(bank):
+    if bank not in BANK_FUNCTIONS:
+        raise HTTPException(status_code=400, detail="Invalid bank name")
+    
+    return BANK_FUNCTIONS[bank]()

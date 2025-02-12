@@ -71,4 +71,11 @@ class TransactionAndBalanceRes(BaseModel):
     bank: str
     UserId: str
     transaction: list[str]
-    balance: list[str]
+    balance: list[str]\
+
+class TransferRequest(BaseModel):
+    amount: str
+    schemeName: str
+    identification: str
+    name: str
+    secIdentif: str

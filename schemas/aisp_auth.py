@@ -30,13 +30,6 @@ def get_access_token(bank_info):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-def get_bank_info(bank):
-    if bank not in BANK_FUNCTIONS:
-        raise HTTPException(status_code=400, detail="Invalid bank name")
-    
-    return BANK_FUNCTIONS[bank]()
-
 async def fetch_access_token(userId, bank):
     tokens = await account_auth_tokens.find_one({'UserId': userId, 'bank': bank})
     return tokens.get("access_token")

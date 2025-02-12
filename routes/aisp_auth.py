@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from schemas.user_auth import get_current_user
-from schemas.bank_auth import get_bank_info, fetch_access_token
+from schemas.aisp_auth import fetch_access_token
 from models.models import User
-from schemas.bank_auth import BANK_FUNCTIONS
+from config.bank_data import BANK_FUNCTIONS, get_bank_info
 from config.database import account_auth_tokens, account_access_consents
 import httpx
 from schemas.aisp_apis import *
@@ -13,7 +13,6 @@ router = APIRouter(prefix="/bank")
 
 @router.post("/create-consent/")
 async def create_consent(bank: str, current_user: User = Depends(get_current_user)):
-    print(current_user.userId)
     if bank not in BANK_FUNCTIONS:
         raise HTTPException(status_code=404, detail="Bank not supported")
     
@@ -35,7 +34,7 @@ async def create_consent(bank: str, current_user: User = Depends(get_current_use
         token_data["UserId"] = current_user.userId
         token_data["bank"] = bank
         await account_auth_tokens.update_one({"UserId": current_user.userId, "bank": bank}, {"$set":token_data}, upsert=True)
-        return {'message': 'Requested for consent'}
+        return {'message': 'Requested for consent'} 
 
 @router.post('/submit-consent/')
 async def create_account_access_consent(bank: str, current_user: User=Depends(get_current_user)):
@@ -88,14 +87,21 @@ async def create_account_access_consent(bank: str, current_user: User=Depends(ge
         f"response_type=code id_token&"
         f"scope=openid accounts&"
         f"redirect_uri={bank_info['REDIRECT_URI']}&"
-        f"request={consent_id}"
+        f"request={consent_id}&"
+        f"state=aisp"
     )
 
     return {"auth_url": auth_url}
 
 
 @router.post("/exchange-token/")
-async def exchange_token(code: str, bank: str, current_user: User=Depends(get_current_user)):
+async def exchange_token(
+    code: str = Query(...), 
+    bank: str = Query(...), 
+    state: str = Query("aisp"), 
+    current_user: User = Depends(get_current_user)
+):
+    userId = current_user.userId
     if bank not in BANK_FUNCTIONS:
         raise HTTPException(status_code=404, detail="Bank not supported")
 
@@ -115,11 +121,14 @@ async def exchange_token(code: str, bank: str, current_user: User=Depends(get_cu
             raise HTTPException(status_code=response.status_code, detail=response.text)
         
         token_data = response.json()
-        token_data["UserId"] = current_user.userId
+        token_data["UserId"] = userId
         token_data["bank"] = bank
-        await account_auth_tokens.update_one({"UserId": current_user.userId, "bank": bank}, {"$set":token_data}, upsert=True)
+        token_data["state"] = state
+        if state == "aisp":
+            await account_auth_tokens.update_one({"UserId": userId, "bank": bank}, {"$set":token_data}, upsert=True)
+        if state == "pisp":
+            await pisp_auth_tokens.update_one({"UserId": userId, "bank": bank}, {"$set":token_data}, upsert=True)
 
-    userId = current_user.userId
     await get_account_access_consent(bank, userId)
     accounts_data = await get_accounts(bank, userId)
     for account in accounts_data:

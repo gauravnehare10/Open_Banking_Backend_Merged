@@ -46,14 +46,14 @@ async def get_user(username: str):
     if user_dict:
         # Map database field 'password' to 'hashed_password'
         user_dict["hashed_password"] = user_dict.pop("password", None)
-        user_dict["userId"] = user_dict.pop("_id", None)
+        user_dict["userId"] = user_dict.pop("_id", None)	
         return UserInDB(**user_dict)
     return None
 
 async def authenticate_user(username: str, password: str):
     user = await get_user(username)
     if not user:
-        return False
+        return False	
     if not verify_password(password, user.hashed_password):
         return False
     return user

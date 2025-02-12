@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from schemas.bank_auth import fetch_access_token, get_bank_info, upsert_data, get_consent_id
+from schemas.aisp_auth import fetch_access_token, upsert_data, get_consent_id
+from config.bank_data import get_bank_info
 from schemas.user_auth import get_current_user
 from config.database import *
 import httpx

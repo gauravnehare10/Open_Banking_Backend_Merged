@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from routes import bank_auth, user_auth, users, mortgages, users_bank
+from routes import aisp_auth, user_auth, users, mortgages, users_bank, pisp_auth
 from fastapi.middleware.cors import CORSMiddleware
 
 from schemas import aisp_apis
@@ -9,9 +9,10 @@ app = FastAPI()
 app.include_router(user_auth.router)
 app.include_router(users.router)
 app.include_router(mortgages.router)
-app.include_router(bank_auth.router)
+app.include_router(aisp_auth.router)
 app.include_router(aisp_apis.router)
 app.include_router(users_bank.router)
+app.include_router(pisp_auth.router)
 
 
 app.add_middleware(

@@ -31,3 +31,6 @@ products = db.products
 scheduled_payments = db.scheduled_payments
 statements = db.statements
 offers = db.offers
+
+pisp_auth_tokens = db.pisp_auth_tokens
+pisp_payments_consents = db.pisp_payments_consents
