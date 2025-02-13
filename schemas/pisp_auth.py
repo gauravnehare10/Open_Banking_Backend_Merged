@@ -4,7 +4,7 @@ import httpx
 from config.bank_data import BANK_FUNCTIONS, get_bank_info
 
 
-async def fetch_access_token(userId, bank):
+async def fetch_access_token(bank, userId):
     tokens = await pisp_auth_tokens.find_one({'UserId': userId, 'bank': bank})
     return tokens.get("access_token")
 
@@ -36,4 +36,3 @@ async def fetch_consent(bank, userId):
     if not consent:
         raise HTTPException(status_code=404, detail="Consent not found.")
     return consent
-    

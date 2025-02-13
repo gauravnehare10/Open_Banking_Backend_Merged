@@ -9,14 +9,15 @@ load_dotenv(dotenv_path)
 
 def NatWest():
     return {
-    "CLIENT_ID": os.getenv("NATWEST_CLIENT_ID"),
-    "CLIENT_SECRET": os.getenv("NATWEST_CLIENT_SECRET"),
-    "REDIRECT_URI": os.getenv("NATWEST_REDIRECT_URI"),
-    "AUTHORIZATION_USERNAME": os.getenv("NATWEST_AUTHORIZATION_USERNAME"),
-    "TOKEN_URL": "https://ob.sandbox.natwest.com/token",
-    "AUTH_URL": "https://api.sandbox.natwest.com/authorize",
-    "API_BASE_URL": "https://ob.sandbox.natwest.com/open-banking/v3.1/aisp",
-    }
+        "CLIENT_ID": os.getenv("NATWEST_CLIENT_ID"),
+        "CLIENT_SECRET": os.getenv("NATWEST_CLIENT_SECRET"),
+        "FINANCIAL_ID": os.getenv("NATWEST_FINANCIAL_ID"),
+        "REDIRECT_URI": os.getenv("NATWEST_REDIRECT_URI"),
+        "AUTHORIZATION_USERNAME": os.getenv("NATWEST_AUTHORIZATION_USERNAME"),
+        "TOKEN_URL": "https://ob.sandbox.natwest.com/token",
+        "AUTH_URL": "https://api.sandbox.natwest.com/authorize",
+        "API_BASE_URL": "https://ob.sandbox.natwest.com/open-banking/v3.1/aisp",
+        }
 
 def RBS():
     return {

@@ -124,22 +124,22 @@ async def exchange_token(
         token_data["UserId"] = userId
         token_data["bank"] = bank
         token_data["state"] = state
-        if state == "aisp":
-            await account_auth_tokens.update_one({"UserId": userId, "bank": bank}, {"$set":token_data}, upsert=True)
         if state == "pisp":
             await pisp_auth_tokens.update_one({"UserId": userId, "bank": bank}, {"$set":token_data}, upsert=True)
-
-    await get_account_access_consent(bank, userId)
-    accounts_data = await get_accounts(bank, userId)
-    for account in accounts_data:
-        account_id = account["AccountId"]
-        await get_account_transactions(account_id, bank, userId)
-        await get_account_beneficiaries(account_id, bank, userId)
-        await get_account_balances(account_id, bank, userId)
-        await get_account_direct_debits(account_id, bank, userId)
-        await get_account_standing_orders(account_id, bank, userId)
-        await get_account_product(account_id, bank, userId)
-        await get_account_scheduled_payments(account_id, bank, userId)
+        
+        if state == "aisp":
+            await account_auth_tokens.update_one({"UserId": userId, "bank": bank}, {"$set":token_data}, upsert=True)
+            await get_account_access_consent(bank, userId)
+            accounts_data = await get_accounts(bank, userId)
+            for account in accounts_data:
+                account_id = account["AccountId"]
+                await get_account_transactions(account_id, bank, userId)
+                await get_account_beneficiaries(account_id, bank, userId)
+                await get_account_balances(account_id, bank, userId)
+                await get_account_direct_debits(account_id, bank, userId)
+                await get_account_standing_orders(account_id, bank, userId)
+                await get_account_product(account_id, bank, userId)
+                await get_account_scheduled_payments(account_id, bank, userId)
         
         
     return {"message": "Bank Authorisation Successful!"}
