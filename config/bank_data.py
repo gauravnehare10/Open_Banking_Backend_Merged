@@ -16,7 +16,7 @@ def NatWest():
         "AUTHORIZATION_USERNAME": os.getenv("NATWEST_AUTHORIZATION_USERNAME"),
         "TOKEN_URL": "https://ob.sandbox.natwest.com/token",
         "AUTH_URL": "https://api.sandbox.natwest.com/authorize",
-        "API_BASE_URL": "https://ob.sandbox.natwest.com/open-banking/v3.1/aisp",
+        "API_BASE_URL": "https://ob.sandbox.natwest.com/open-banking/v3.1",
         }
 
 def RBS():
@@ -27,7 +27,7 @@ def RBS():
         "AUTHORIZATION_USERNAME": os.getenv("RBS_AUTHORIZATION_USERNAME"),
         "TOKEN_URL": "https://ob.sandbox.rbs.co.uk/token",
         "AUTH_URL": "https://api.sandbox.rbs.co.uk/authorize",
-        "API_BASE_URL": "https://ob.sandbox.rbs.co.uk/open-banking/v3.1/aisp"
+        "API_BASE_URL": "https://ob.sandbox.rbs.co.uk/open-banking/v3.1"
         }
 
 BANK_FUNCTIONS = {

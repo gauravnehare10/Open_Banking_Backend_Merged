@@ -15,7 +15,7 @@ async def get_account_access_consent(bank, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
     consent_id = await get_consent_id(userId, bank)
-    url = f"{bank_info.get("API_BASE_URL")}/account-access-consents/{consent_id}"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/account-access-consents/{consent_id}"
     headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/x-www-form-urlencoded"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
@@ -31,13 +31,15 @@ async def get_account_access_consent(bank, userId):
 
 #@router.get("/accounts")
 async def get_accounts(bank: str, userId):
+    print(bank)
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts"
     headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/x-www-form-urlencoded"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
         if response.status_code != 200:
+            print(response.text)
             raise HTTPException(status_code=response.status_code, detail=response.text)
 
         data = response.json()["Data"]["Account"]
@@ -61,7 +63,7 @@ async def get_account_details(account_id: str, bank: str, current_user: User=Dep
     userId = current_user.userId
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts/{account_id}"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
@@ -77,7 +79,7 @@ async def get_account_details(account_id: str, bank: str, current_user: User=Dep
 async def get_account_transactions(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/transactions"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts/{account_id}/transactions"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
@@ -104,7 +106,7 @@ async def get_account_transactions(account_id: str, bank: str, userId):
 async def get_account_beneficiaries(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/beneficiaries"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts/{account_id}/beneficiaries"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
@@ -131,7 +133,7 @@ async def get_account_beneficiaries(account_id: str, bank: str, userId):
 async def get_account_balances(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/balances"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts/{account_id}/balances"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
@@ -160,7 +162,7 @@ async def get_account_balances(account_id: str, bank: str, userId):
 async def get_account_direct_debits(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/direct-debits"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts/{account_id}/direct-debits"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
@@ -188,7 +190,7 @@ async def get_account_direct_debits(account_id: str, bank: str, userId):
 async def get_account_standing_orders(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/standing-orders"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts/{account_id}/standing-orders"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
@@ -216,7 +218,7 @@ async def get_account_standing_orders(account_id: str, bank: str, userId):
 async def get_account_product(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/product"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts/{account_id}/product"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
@@ -244,7 +246,7 @@ async def get_account_product(account_id: str, bank: str, userId):
 async def get_account_scheduled_payments(account_id: str, bank: str, userId):
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/scheduled-payments"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts/{account_id}/scheduled-payments"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
@@ -273,7 +275,7 @@ async def get_account_statements(account_id: str, bank: str, current_user: User=
     userId = current_user.userId
     access_token = await fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/statements"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts/{account_id}/statements"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)
@@ -290,7 +292,7 @@ async def get_account_offers(account_id: str, bank: str, current_user: User=Depe
     userId = current_user.userId
     access_token = fetch_access_token(userId, bank)
     bank_info = get_bank_info(bank)
-    url = f"{bank_info.get("API_BASE_URL")}/accounts/{account_id}/offers"
+    url = f"{bank_info.get("API_BASE_URL")}/aisp/accounts/{account_id}/offers"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)

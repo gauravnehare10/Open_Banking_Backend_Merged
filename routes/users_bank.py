@@ -27,7 +27,7 @@ async def get_authorized_banks(current_user: User = Depends(get_current_user)):
 
 @router.get("/bank-accounts/{bank}")
 async def get_bank_details(bank: str, current_user: User = Depends(get_current_user)):
-    authorised = check_bank_authorization(current_user.userId, bank)
+    authorised = await check_bank_authorization(current_user.userId, bank)
     
     accounts_data = await accounts.find(
         {"UserId": current_user.userId, "bank": bank}

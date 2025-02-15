@@ -60,7 +60,7 @@ async def create_payment_consent(bank: str, creditor_details: TransferRequest, c
 
     async with httpx.AsyncClient() as client:
         consent_response = await client.post(
-            "https://ob.sandbox.natwest.com/open-banking/v3.1/pisp/domestic-payment-consents",
+            f"{bank_info["API_BASE_URL"]}/pisp/domestic-payment-consents",
             headers=headers,
             json=payload)
         if consent_response.status_code != 201:
@@ -76,7 +76,6 @@ async def create_payment_consent(bank: str, creditor_details: TransferRequest, c
 
 @router.get("/payment-authorize")
 async def authorize_payment(bank: str, consent_id: str, current_user: User=Depends(get_current_user)):
-    print(bank)
     if bank not in BANK_FUNCTIONS:
         raise HTTPException(status_code=404, detail="Bank not supported")
 
@@ -122,9 +121,10 @@ async def create_payment(bank: str, current_user: User=Depends(get_current_user)
     }
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            "https://ob.sandbox.natwest.com/open-banking/v3.1/pisp/domestic-payments",
+            f"{bank_info["API_BASE_URL"]}/pisp/domestic-payments",  
             json=request_data, 
-            headers=headers)    
+            headers=headers)
+        print(response.text)
         if response.status_code != 201:
             raise HTTPException(status_code=response.status_code, detail=response.text)
         new_consent_data = response.json()
@@ -132,10 +132,12 @@ async def create_payment(bank: str, current_user: User=Depends(get_current_user)
         new_consent_data["bank"] = bank
         await pisp_payments_consents.update_one({"UserId": userId, "bank": bank}, {"$set":new_consent_data}, upsert=True)
         accounts_data = await get_accounts(bank, userId)
+        print(accounts_data)
         for account in accounts_data:
             account_id = account["AccountId"]
             await get_account_transactions(account_id, bank, userId)
             await get_account_balances(account_id, bank, userId)
+            print(account_id)
 
     return new_consent_data
 
@@ -146,7 +148,7 @@ async def get_payment_status(bank: str, payment_id: str, current_user: User=Depe
     bank_info = get_bank_info(bank)
     userId = current_user.userId
     access_token = await fetch_access_token(bank=bank, userId=userId)
-    url = f"https://ob.sandbox.natwest.com/open-banking/v3.1/pisp/domestic-payments/{payment_id}"
+    url = f"{bank_info["API_BASE_URL"]}/pisp/domestic-payments/{payment_id}"
     headers = {"Authorization": f"Bearer {access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers)

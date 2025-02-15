@@ -44,9 +44,9 @@ async def get_consent_id(userId, bank):
 async def upsert_data(collection, filter_query, update_data):
     await collection.update_one(filter_query, {"$set": update_data}, upsert=True)
 
-async def check_bank_authorization(userId, bank_name):
+async def check_bank_authorization(userId, bank):
     consent = await account_access_consents.find_one(
-        {"UserId": userId, "bank": bank_name, "Status": "Authorised"}
+        {"UserId": userId, "bank": bank, "Status": "Authorised"}
     )
 
     if not consent:

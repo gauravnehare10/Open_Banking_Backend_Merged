@@ -66,7 +66,7 @@ async def create_account_access_consent(bank: str, current_user: User=Depends(ge
 
     async with httpx.AsyncClient() as client:
         consent_response = await client.post(
-            f"{bank_info['API_BASE_URL']}/account-access-consents",
+            f"{bank_info['API_BASE_URL']}/aisp/account-access-consents",
             headers=headers,
             json=consent_payload,
         )
