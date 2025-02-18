@@ -124,7 +124,6 @@ async def create_payment(bank: str, current_user: User=Depends(get_current_user)
             f"{bank_info["API_BASE_URL"]}/pisp/domestic-payments",  
             json=request_data, 
             headers=headers)
-        print(response.text)
         if response.status_code != 201:
             raise HTTPException(status_code=response.status_code, detail=response.text)
         new_consent_data = response.json()
@@ -132,7 +131,6 @@ async def create_payment(bank: str, current_user: User=Depends(get_current_user)
         new_consent_data["bank"] = bank
         await pisp_payments_consents.update_one({"UserId": userId, "bank": bank}, {"$set":new_consent_data}, upsert=True)
         accounts_data = await get_accounts(bank, userId)
-        print(accounts_data)
         for account in accounts_data:
             account_id = account["AccountId"]
             await get_account_transactions(account_id, bank, userId)

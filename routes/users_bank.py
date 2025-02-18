@@ -88,7 +88,6 @@ async def get_account_by_id(bank: str, account_id: str, current_user: User=Depen
 
 @router.get('/{bank}/accounts/{account_id}/transactions')
 async def get_transactions_by_acc_id(bank: str, account_id: str, current_user: User=Depends(get_current_user)):
-    print(current_user.userId)
     try:
         authorized = await check_bank_authorization(current_user.userId, bank)
     except HTTPException as e:
@@ -97,6 +96,18 @@ async def get_transactions_by_acc_id(bank: str, account_id: str, current_user: U
     transactions_details = await get_data(transactions, bank, current_user.userId, account_id)
 
     return transactions_details
+
+@router.get("/{bank}/accounts/{account_id}/transactions/{transaction_id}")
+async def get_transaction_by_id(bank: str, account_id: str, transaction_id: str, current_user:User=Depends(get_current_user)):
+    try:
+        authorized = await check_bank_authorization(current_user.userId, bank)
+    except HTTPException as e:
+        raise e
+    
+    transaction_details = await transactions.find_one({"bank": bank, "AccountId": account_id, "TransactionId": transaction_id})
+    transaction_details.pop("_id")
+    return transaction_details
+        
 
 @router.get('/{bank}/accounts/{account_id}/beneficiaries')
 async def get_beneficiaries_by_id(bank: str, account_id: str, current_user: User=Depends(get_current_user)):
