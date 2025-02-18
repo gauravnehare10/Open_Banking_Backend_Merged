@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from models.models import User
 from schemas.user_auth import get_current_user
-from config.database import account_access_consents, account_auth_tokens, accounts, transactions, balances, beneficiaries, direct_debits, standing_orders, products, scheduled_payments
+from config.database import account_access_consents, accounts, transactions, balances, beneficiaries, direct_debits, standing_orders, products, scheduled_payments
 from schemas.aisp_auth import check_bank_authorization, get_data
 from pymongo import DESCENDING
 
