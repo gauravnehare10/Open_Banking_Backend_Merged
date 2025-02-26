@@ -34,3 +34,6 @@ offers = db.offers
 
 pisp_auth_tokens = db.pisp_auth_tokens
 pisp_payments_consents = db.pisp_payments_consents
+
+cof_auth_tokens = db.cof_auth_tokens
+cof_consents = db.cof_consents

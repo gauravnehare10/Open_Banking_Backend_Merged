@@ -121,6 +121,20 @@ async def get_beneficiaries_by_id(bank: str, account_id: str, current_user: User
     return beneficiaries_data
 
 
+@router.get("/{bank}/accounts/{account_id}/balances")
+async def get_transaction_by_id(bank: str, account_id: str, current_user:User=Depends(get_current_user)):
+    print(bank)
+    try:
+        authorized = await check_bank_authorization(current_user.userId, bank)
+    except HTTPException as e:
+        raise e
+    
+    balance_details = await balances.find({"bank": bank, "AccountId": account_id}).to_list(length=None)
+    for balance in balance_details:
+        balance.pop("_id")
+    return balance_details
+
+
 @router.get('/{bank}/accounts/{account_id}/direct-debits')
 async def get_direct_debits_by_id(bank: str, account_id: str, current_user: User=Depends(get_current_user)):
     try:

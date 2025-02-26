@@ -79,3 +79,7 @@ class TransferRequest(BaseModel):
     identification: str
     name: str
     secIdentif: str
+
+
+class FundConfirmRequest(BaseModel):
+    amount: float

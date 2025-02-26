@@ -75,7 +75,7 @@ async def create_payment_consent(bank: str, creditor_details: TransferRequest, c
         return consent_id
 
 @router.get("/payment-authorize")
-async def authorize_payment(bank: str, consent_id: str, current_user: User=Depends(get_current_user)):
+async def authorize_payment(bank: str, current_user: User=Depends(get_current_user)):
     if bank not in BANK_FUNCTIONS:
         raise HTTPException(status_code=404, detail="Bank not supported")
 
@@ -90,7 +90,7 @@ async def authorize_payment(bank: str, consent_id: str, current_user: User=Depen
         f"&response_type=code id_token"
         f"&scope=openid payments"
         f"&redirect_uri={bank_info["REDIRECT_URI"]}"
-        f"&request={consent_id}"
+        f"&request={consent["Data"]["ConsentId"]}"
         f"&state=pisp"
     )
 
@@ -135,7 +135,6 @@ async def create_payment(bank: str, current_user: User=Depends(get_current_user)
             account_id = account["AccountId"]
             await get_account_transactions(account_id, bank, userId)
             await get_account_balances(account_id, bank, userId)
-            print(account_id)
 
     return new_consent_data
 

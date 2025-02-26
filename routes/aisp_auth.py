@@ -105,7 +105,7 @@ async def exchange_token(
     if bank not in BANK_FUNCTIONS:
         raise HTTPException(status_code=404, detail="Bank not supported")
 
-    bank_info = BANK_FUNCTIONS[bank]()
+    bank_info = get_bank_info(bank)
     
     payload = {
         "grant_type": "authorization_code",
@@ -116,7 +116,12 @@ async def exchange_token(
     }
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(bank_info["TOKEN_URL"], data=payload)
+        response = await client.post(
+            bank_info["TOKEN_URL"], 
+            data=payload,
+            headers={"Content-Type": "application/x-www-form-urlencoded"})
+        print(f"Bank Response Status Code: {response.status_code}")
+        print(f"Bank Response Text: {response.text}")
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code, detail=response.text)
         
@@ -126,6 +131,9 @@ async def exchange_token(
         token_data["state"] = state
         if state == "pisp":
             await pisp_auth_tokens.update_one({"UserId": userId, "bank": bank}, {"$set":token_data}, upsert=True)
+
+        if state == "cof":
+            await cof_auth_tokens.update_one({"UserId": userId, "bank": bank}, {"$set":token_data}, upsert=True)
         
         if state == "aisp":
             await account_auth_tokens.update_one({"UserId": userId, "bank": bank}, {"$set":token_data}, upsert=True)
