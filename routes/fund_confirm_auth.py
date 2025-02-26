@@ -4,7 +4,7 @@ from config.bank_data import BANK_FUNCTIONS, get_bank_info
 from schemas.fund_confirm_auth import get_access_token, fetch_access_token, fetch_cof_consent
 import httpx
 from models.models import User, FundConfirmRequest
-from config.database import cof_auth_tokens, cof_consents
+from config.database import cof_consents
 import datetime
 
 
@@ -132,7 +132,6 @@ async def fund_confirmation(bank: str, request: FundConfirmRequest, current_user
     consent_id = consent["Data"]["ConsentId"]
     print(consent_id)
     access_token = await fetch_access_token(bank, userId)
-    print(access_token)
 
     url = f"{bank_info["API_BASE_URL"]}/cbpii/funds-confirmations"
     headers = {

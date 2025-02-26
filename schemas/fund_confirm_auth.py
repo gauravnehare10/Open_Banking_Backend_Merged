@@ -33,6 +33,3 @@ async def fetch_cof_consent(bank: str, userId: str):
         raise HTTPException(status_code=404, detail="Consent not found.")
     return consent
 
-
-async def get_new_access_token(bank: str, userId: str):
-    pass
